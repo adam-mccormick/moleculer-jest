@@ -1,4 +1,4 @@
-const { TestBroker } = require('./test.broker');
+const { TestBroker } = require('../../index');
 
 const broker = new TestBroker();
 

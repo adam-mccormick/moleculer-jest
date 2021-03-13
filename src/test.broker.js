@@ -43,6 +43,4 @@ class TestBroker extends ServiceBroker {
 	}
 }
 
-module.exports = {
-	TestBroker
-};
+module.exports = TestBroker;
