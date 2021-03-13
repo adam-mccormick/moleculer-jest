@@ -1,8 +1,9 @@
 ![Moleculer logo](http://moleculer.services/images/banner.png)
 
-[![Build Status](https://travis-ci.org/Adam McCormick/moleculer-jest.svg?branch=master)](https://travis-ci.org/Adam McCormick/moleculer-jest)
-[![Coverage Status](https://coveralls.io/repos/github/Adam McCormick/moleculer-jest/badge.svg?branch=master)](https://coveralls.io/github/Adam McCormick/moleculer-jest?branch=master)
-[![Known Vulnerabilities](https://snyk.io/test/github/Adam McCormick/moleculer-jest/badge.svg)](https://snyk.io/test/github/Adam McCormick/moleculer-jest)
+![example main status](https://github.com/adam-mccormick/moleculer-jest/actions/workflows/ci.yml/badge.svg?branch=main)
+
+[![Coverage Status](https://coveralls.io/repos/github/adam-mccormick/moleculer-jest/badge.svg?branch=master)](https://coveralls.io/github/adam-mccormick/moleculer-jest?branch=master)
+[![Known Vulnerabilities](https://snyk.io/test/github/adam-mccormick/moleculer-jest/badge.svg)](https://snyk.io/test/github/adam-mccormick/moleculer-jest)
 
 # moleculer-jest [![NPM version](https://img.shields.io/npm/v/moleculer-jest.svg)](https://www.npmjs.com/package/moleculer-jest)
 
