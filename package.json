@@ -4,7 +4,7 @@
   "description": "Jest helper for testing MoleculerJS services",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon examples/index.js",
+    "dev": "jest examples/index.spec.js",
     "ci": "jest --watch",
     "test": "jest --coverage",
     "lint": "eslint --ext=.js src test",
@@ -38,13 +38,15 @@
     "moleculer": "^0.14.10",
     "nodemon": "^2.0.4",
     "npm-check": "^5.9.2",
-    "prettier": "^2.1.1"
+    "prettier": "^2.1.1",
+    "sinon": "^9.2.4"
   },
   "jest": {
     "testEnvironment": "node",
     "rootDir": "./src",
     "roots": [
-      "../test"
+      "../test",
+      "../examples"
     ],
     "coverageDirectory": "../coverage",
     "coveragePathIgnorePatterns": [
@@ -53,5 +55,8 @@
   },
   "engines": {
     "node": ">= 10.x.x"
+  },
+  "dependencies": {
+    "jest-matcher-utils": "^26.6.2"
   }
 }

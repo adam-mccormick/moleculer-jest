@@ -56,12 +56,9 @@ describe('The test broker', () => {
 			}
 		});
 		const expected = 'EXPECTED';
-		broker.mock('dependent.action', () => {
-			return expected;
-		});
+		broker.mock('dependent.action', () => expected);
 		await broker.start();
-		const res = await broker.call('test.action');
-		expect(res).toEqual(expected);
+		await expect(broker.call('test.action')).resolves.toEqual(expected);
 		await broker.destroyService('test');
 		await broker.stop();
 	});
@@ -81,7 +78,7 @@ describe('The test broker', () => {
 		await broker.stop();
 	});
 
-	it('should support mock to reject', async () => {
+	it('should allow mocks to reject', async () => {
 		broker.mock('test.rejection').mockRejectedValue(new Error('MOCK ERROR'));
 		await broker.start();
 		await expect(broker.call('test.rejection')).rejects.toThrow('MOCK ERROR');
@@ -122,9 +119,9 @@ describe('The test broker', () => {
 		await broker.emit('test.again');
 		await broker.emit('test.again', { data: 'expected' });
 
-		expect(broker.emits).toBeCalledWith('test.one', { data: 'expected' }, { opts: 'expected' });
-		expect(broker.emits).toHaveBeenNthCalledWith(2, 'test.again');
-		expect(broker.emits).toHaveBeenNthCalledWith(3, 'test.again', { data: 'expected' });
+		expect(broker.emit).toBeCalledWith('test.one', { data: 'expected' }, { opts: 'expected' });
+		expect(broker.emit).toHaveBeenNthCalledWith(2, 'test.again');
+		expect(broker.emit).toHaveBeenNthCalledWith(3, 'test.again', { data: 'expected' });
 
 		await broker.stop();
 	});
@@ -135,13 +132,13 @@ describe('The test broker', () => {
 		await broker.broadcast('test.again');
 		await broker.broadcast('test.again', { data: 'expected' });
 
-		expect(broker.broadcasts).toBeCalledWith(
+		expect(broker.broadcast).toBeCalledWith(
 			'test.one',
 			{ data: 'expected' },
 			{ opts: 'expected' }
 		);
-		expect(broker.broadcasts).toHaveBeenNthCalledWith(2, 'test.again');
-		expect(broker.broadcasts).toHaveBeenNthCalledWith(3, 'test.again', { data: 'expected' });
+		expect(broker.broadcast).toHaveBeenNthCalledWith(2, 'test.again');
+		expect(broker.broadcast).toHaveBeenNthCalledWith(3, 'test.again', { data: 'expected' });
 
 		await broker.stop();
 	});
@@ -154,14 +151,32 @@ describe('The test broker', () => {
 
 		// check the direct order here will also include local node events
 		// like $services.changed and $broker.started
-		expect(broker.broadcastLocals).toBeCalledWith(
+		expect(broker.broadcastLocal).toBeCalledWith(
 			'test.one',
 			{ data: 'expected' },
 			{ opts: 'expected' }
 		);
-		expect(broker.broadcastLocals).toBeCalledWith('test.again');
-		expect(broker.broadcastLocals).toBeCalledWith('test.again', { data: 'expected' });
+		expect(broker.broadcastLocal).toBeCalledWith('test.again');
+		expect(broker.broadcastLocal).toBeCalledWith('test.again', { data: 'expected' });
 
 		await broker.stop();
+	});
+
+	it('should work with emit local event handler method', async () => {
+		const service = broker.createService({
+			name: 'test',
+			events: {
+				'expected.event': {
+					handler(ctx) {
+						this.broker.call('another.action', ctx.params);
+					}
+				}
+			}
+		});
+
+		const mock = broker.mock('another.action');
+		await broker.start();
+		await service.emitLocalEventHandler('expected.event', { data: 'foo' });
+		expect(mock).toHaveBeenCalledWith({ data: 'foo' }, undefined);
 	});
 });

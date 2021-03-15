@@ -7,17 +7,57 @@
 
 # moleculer-jest [![NPM version](https://img.shields.io/npm/v/moleculer-jest.svg)](https://www.npmjs.com/package/moleculer-jest)
 
-Jest helper for testing MoleculerJS services
+Jest helper for testing MoleculerJS services. There's not much to it but what it does provide removed a lot of boiler 
+plate for us. Contributions and suggestions for enhancements are most certainly welcome.
 
 ## Features
+* Mock service actions
+* Spy on events
 
 ## Install
 ```
-npm install moleculer-jest --save
+npm install -D moleculer-jest
 ```
 
 ## Usage
+Create an instance of `TestBroker` in your test as a replacement for a `ServiceBroker`. The `TestBroker` extends
+the `ServiceBroker` and adds a few convenience methods for mocking out service actions and spying on event emission.
 
+```javascript
+const { TestBroker } = require('moleculer-jest');
+const broker = new TestBroker();
+
+const service = broker.createService({
+    name: 'foo',
+    actions: {
+        async bar(ctx) {
+            const res = await ctx.call('dependent.action', { arg: '1' });
+            ctx.emit('foo.called', { event: 1 });
+            ctx.emit('foo.called', { event: 2 });
+            ctx.emit('foo.called', { event: res });
+            return 'OK' 
+        }
+    },
+});
+
+describe('my service', () => {
+    beforeAll(() => broker.start());
+    afterAll(() => broker.stop());
+    afterEach(() => broker.reset()); // reset the brokers mocks after each test
+    
+    it('should call another services and emit an event', async () => {
+        const mock = broker.mock('dependent.action', () => 'EXPECTED');
+        const res = await broker.call('foo.bar');
+        expect(res).toBe('OK');
+        expect(mock).toHaveBeenCalledWith({ arg: '1' });
+        // you could also look it up by action name
+        expect(broker.mocks['dependent.action']).toHaveBeenCalledWith({ arg: 1 });
+        expect(broker.emit).toHaveBeenNthCalledWith(1, { event: 1 });
+        expect(broker.emit).toHaveBeenNthCalledWith(2, { event: 2 });
+        expect(broker.emit).toHaveBeenNthCalledWith(3, { event: 'EXPECTED' });
+    });
+})
+```
 
 ## Test
 ```
