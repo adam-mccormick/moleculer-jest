@@ -3,14 +3,19 @@ const { TestBroker } = require('../../index');
 const broker = new TestBroker();
 
 describe('The test broker', () => {
-	afterEach(() => broker.reset());
+	afterEach(async () => {
+		broker.reset();
+		// clean up some common services created in tests
+		if (broker.getLocalService('test')) await broker.destroyService('test');
+		if (broker.getLocalService('dependency')) await broker.destroyService('dependency');
+		await broker.stop();
+	});
 
 	it('should mocks calls to non existent service', async () => {
 		await broker.start();
 		const mock = broker.mock('test.action');
 		await broker.call('test.action');
 		expect(mock).toBeCalled();
-		await broker.stop();
 	});
 
 	it('should mock calls to existing service when specified', async () => {
@@ -24,8 +29,6 @@ describe('The test broker', () => {
 		const mock = broker.mock('test.action');
 		await broker.call('test.action');
 		expect(mock).toBeCalledTimes(1);
-		await broker.destroyService('test');
-		await broker.stop();
 	});
 
 	it('should mock call made from action context', async () => {
@@ -42,8 +45,6 @@ describe('The test broker', () => {
 		await broker.start();
 		await broker.call('test.action');
 		expect(mock).toBeCalledTimes(1);
-		await broker.destroyService('test');
-		await broker.stop();
 	});
 
 	it('should return value from mock', async () => {
@@ -59,8 +60,6 @@ describe('The test broker', () => {
 		broker.mock('dependent.action', () => expected);
 		await broker.start();
 		await expect(broker.call('test.action')).resolves.toEqual(expected);
-		await broker.destroyService('test');
-		await broker.stop();
 	});
 
 	it('should send caller arguments to mock', async () => {
@@ -68,21 +67,18 @@ describe('The test broker', () => {
 		await broker.start();
 		await broker.call('test.action', { param: 'expected' }, { option: 'expected' });
 		expect(mock).toBeCalledWith({ param: 'expected' }, { option: 'expected' });
-		await broker.stop();
 	});
 
 	it('should wrap mock function in a promise', async () => {
 		broker.mock('test.action').mockReturnValue('OK'); // doesn't need to return a promise
 		await broker.start();
 		await expect(broker.call('test.action')).resolves.toBeDefined();
-		await broker.stop();
 	});
 
 	it('should allow mocks to reject', async () => {
 		broker.mock('test.rejection').mockRejectedValue(new Error('MOCK ERROR'));
 		await broker.start();
 		await expect(broker.call('test.rejection')).rejects.toThrow('MOCK ERROR');
-		await broker.stop();
 	});
 
 	it('should expose mocks', () => {
@@ -109,8 +105,6 @@ describe('The test broker', () => {
 		]);
 
 		Object.values(broker.mocks).forEach(mock => expect(mock).toBeCalled());
-
-		await broker.stop();
 	});
 
 	it('should spy on emit events', async () => {
@@ -122,8 +116,6 @@ describe('The test broker', () => {
 		expect(broker.emit).toBeCalledWith('test.one', { data: 'expected' }, { opts: 'expected' });
 		expect(broker.emit).toHaveBeenNthCalledWith(2, 'test.again');
 		expect(broker.emit).toHaveBeenNthCalledWith(3, 'test.again', { data: 'expected' });
-
-		await broker.stop();
 	});
 
 	it('should spy on broadcast events', async () => {
@@ -139,8 +131,6 @@ describe('The test broker', () => {
 		);
 		expect(broker.broadcast).toHaveBeenNthCalledWith(2, 'test.again');
 		expect(broker.broadcast).toHaveBeenNthCalledWith(3, 'test.again', { data: 'expected' });
-
-		await broker.stop();
 	});
 
 	it('should spy on local broadcast events', async () => {
@@ -158,8 +148,6 @@ describe('The test broker', () => {
 		);
 		expect(broker.broadcastLocal).toBeCalledWith('test.again');
 		expect(broker.broadcastLocal).toBeCalledWith('test.again', { data: 'expected' });
-
-		await broker.stop();
 	});
 
 	it('should work with emit local event handler method', async () => {
@@ -178,5 +166,52 @@ describe('The test broker', () => {
 		await broker.start();
 		await service.emitLocalEventHandler('expected.event', { data: 'foo' });
 		expect(mock).toHaveBeenCalledWith({ data: 'foo' }, undefined);
+	});
+
+	it('should not fail startup if dependent service not available', async () => {
+		broker.createService({
+			name: 'test',
+			dependencies: ['dependency']
+		});
+
+		await expect(broker.start()).resolves.not.toThrow();
+	});
+
+	it('should wait on a dependent service which has been created', async () => {
+		broker.createService({
+			name: 'dependency',
+			started() {
+				return new Promise(resolve => setTimeout(resolve, 1000));
+			}
+		});
+		broker.createService({
+			name: 'test',
+			dependencies: ['dependency'],
+			settings: {
+				$dependencyTimeout: 10
+			}
+		});
+		await expect(broker.start()).rejects.toThrow('Services waiting is timed out');
+	});
+
+	it('should mock methods invoked in action hooks', async () => {
+		const service = broker.createService({
+			name: 'test',
+			hooks: {
+				before: {
+					'*': 'interceptor'
+				}
+			},
+			actions: {
+				foo() {}
+			},
+			methods: {
+				interceptor() {}
+			}
+		});
+		service.interceptor = jest.fn();
+		await broker.start();
+		await broker.call('test.foo');
+		expect(service.interceptor).toBeCalled();
 	});
 });

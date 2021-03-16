@@ -1,7 +1,7 @@
 {
-  "name": "moleculer-jest",
+  "name": "moleculer-test",
   "version": "0.1.0",
-  "description": "Jest helper for testing MoleculerJS services",
+  "description": "Test helper for testing MoleculerJS services",
   "main": "index.js",
   "scripts": {
     "dev": "jest examples/index.spec.js",

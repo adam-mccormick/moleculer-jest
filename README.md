@@ -5,7 +5,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/adam-mccormick/moleculer-jest/badge.svg?branch=master)](https://coveralls.io/github/adam-mccormick/moleculer-jest?branch=master)
 [![Known Vulnerabilities](https://snyk.io/test/github/adam-mccormick/moleculer-jest/badge.svg)](https://snyk.io/test/github/adam-mccormick/moleculer-jest)
 
-# moleculer-jest [![NPM version](https://img.shields.io/npm/v/moleculer-jest.svg)](https://www.npmjs.com/package/moleculer-jest)
+# moleculer-test [![NPM version](https://img.shields.io/npm/v/moleculer-jest.svg)](https://www.npmjs.com/package/moleculer-jest)
 
 Jest helper for testing MoleculerJS services. There's not much to it but what it does provide removed a lot of boiler 
 plate for us. Contributions and suggestions for enhancements are most certainly welcome.
@@ -13,11 +13,16 @@ plate for us. Contributions and suggestions for enhancements are most certainly 
 ## Features
 * Mock service actions
 * Spy on events
+* Mock dependencies
+* Framework independent (supports jest and sion OOTB) 
 
 ## Install
 ```
-npm install -D moleculer-jest
+npm install -D moleculer-test
 ```
+
+You must also have a mocking framework available. By default, jest and sinon are supported, so you just need to have one of
+them installed. If you want to use a different mocking framework, you can create a custom `MockAdapter`.
 
 ## Usage
 Create an instance of `TestBroker` in your test as a replacement for a `ServiceBroker`. The `TestBroker` extends
@@ -58,6 +63,16 @@ describe('my service', () => {
     });
 })
 ```
+
+## Using different mocking libraries
+If you don't want to use either jest or sinon for mocking in your tests you can create a custom implementation of `MockAdapter`
+to return your desired mock functions.
+
+> TODO: DESCRIBE THIS
+
+## API
+
+> TODO: DOCUMENT ME
 
 ## Test
 ```

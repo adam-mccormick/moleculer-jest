@@ -32,6 +32,7 @@ class TestBroker extends ServiceBroker {
 			this.emit.mockReset();
 			this.broadcast.mockReset();
 			this.broadcastLocal.mockReset();
+			this.createdServices = [];
 		}
 	}
 
@@ -59,6 +60,22 @@ class TestBroker extends ServiceBroker {
 			}
 		}
 		return super.call(action, params, opts);
+	}
+
+	createService(schema, schemaMods) {
+		this.createdServices = this.createdServices || [];
+		this.createdServices.push(schema.name);
+		return super.createService(schema, schemaMods);
+	}
+
+	waitForServices(names, timeout, interval, logger) {
+		// if we are trying to wait on a service which has not already been created
+		if (this.mocking.enabled && !names.every(n => this.createdServices.includes(n))) {
+			// the we just resolve, assume it needs to be mocked out
+			return Promise.resolve();
+		}
+		// a service is expected because create service was called with the same service name
+		return super.waitForServices(names, timeout, interval, logger);
 	}
 }
 
