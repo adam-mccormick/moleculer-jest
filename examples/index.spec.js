@@ -29,7 +29,7 @@ describe('the test service', () => {
 		expect(broker.emit).toBeCalledWith('test.updated', { data: 'data' });
 	});
 
-	it('calls and action and emits an event when receives an important event', async () => {
+	it('calls an action and emits an event when receives an important event', async () => {
 		const mock = broker.mock('another.action'); // NO OP
 		await service.emitLocalEventHandler('important.event', { data: 'data' });
 		expect(broker.emit).toBeCalledWith('test.updated', { data: 'data' });
